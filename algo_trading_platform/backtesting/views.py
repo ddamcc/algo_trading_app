@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 import yfinance as yf
 from rest_framework import serializers
-from backtesting.models import indicator, SMA, entry_condition, Strategy, Parameter
+from backtesting.models import indicator, SMA, entry_condition, Strategy, Parameter, name_map
 from django.middleware.csrf import get_token
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -33,6 +33,25 @@ def backtest_view(request):
         print(strategy_instance)
         parameter_instance = Parameter.objects.create(window=indicator_window)
         print(parameter_instance)
+
+    if request.method == 'GET':
+        strategy_instance = Strategy.objects.get(pk=1)
+        print(strategy_instance)
+        entry_condition_instance = strategy_instance.condition
+        indicator_instance = entry_condition_instance.indicator_1
+        sma = name_map[indicator_instance.name].value.objects.get(pk=indicator_instance.pk)
+        print(sma)
+        strategy_data = {
+                'name': strategy_instance.name,
+                'entry_condition': {
+                    'indicator_1': {
+                        'name': sma.name,
+                        'window': sma.window,
+                    }
+                }
+            }
+
+        return JsonResponse(strategy_data)
 
     return JsonResponse({"message": "Backtest completed successfully"})
 
